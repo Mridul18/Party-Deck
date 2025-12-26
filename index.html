@@ -229,10 +229,114 @@
             color: white;
         }
 
-        /* === DYNAMIC NEON GLOWS === 
-           Instead of changing the background (which destroys glass effect),
-           we change the Border Color and Box Shadow to create a neon glow.
-        */
+        /* === RULES OVERLAY STYLING === */
+        .rules-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+
+        .rules-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .rules-modal {
+            background: rgba(30, 30, 30, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            border-radius: 30px;
+            padding: 40px 30px;
+            max-width: 450px;
+            width: 100%;
+            text-align: left;
+            position: relative;
+        }
+
+        .rules-modal h1 {
+            font-family: 'Bangers', cursive;
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #FFD700;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            letter-spacing: 2px;
+        }
+
+        .rule-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .rule-item:last-child {
+            border-bottom: none;
+        }
+
+        .rule-item .icon {
+            font-size: 2.5rem;
+            margin-right: 20px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .rule-item .text strong {
+            display: block;
+            font-size: 1.2rem;
+            color: white;
+            margin-bottom: 5px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .rule-item .text p {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
+            line-height: 1.4;
+            font-weight: 400;
+            display: block; /* Override flex display from global p */
+            text-align: left;
+            text-shadow: none;
+        }
+
+        .start-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border: none;
+            padding: 18px;
+            border-radius: 15px;
+            color: #00334e;
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        /* === DYNAMIC NEON GLOWS === */
         
         .card.default { 
             border-color: rgba(255, 255, 255, 0.1);
@@ -285,10 +389,46 @@
             h2 { font-size: 1.8rem; }
             .card { padding: 20px 20px; height: 75vh; }
             .spinner-badge { font-size: 1.1rem; padding: 10px 20px; }
+            .rules-modal { padding: 25px 20px; }
+            .rules-modal h1 { font-size: 2.2rem; margin-bottom: 20px; }
+            .rule-item .icon { font-size: 2rem; margin-right: 15px; }
         }
     </style>
 </head>
 <body>
+
+    <!-- RULES OVERLAY -->
+    <div id="rules-overlay" class="rules-overlay">
+        <div class="rules-modal">
+            <h1>📜 HOUSE RULES</h1>
+            
+            <div class="rule-item">
+                <span class="icon">🍺</span>
+                <div class="text">
+                    <strong>1 DRINK</strong>
+                    <p>A standard gulp or mouthful of your current beverage.</p>
+                </div>
+            </div>
+
+            <div class="rule-item">
+                <span class="icon">🥃</span>
+                <div class="text">
+                    <strong>1 SHOT</strong>
+                    <p>A standard shot (approx 45ml) of liquor. Good luck.</p>
+                </div>
+            </div>
+
+            <div class="rule-item">
+                <span class="icon">🥤</span>
+                <div class="text">
+                    <strong>THE CUP</strong>
+                    <p>The entire vessel you are holding right now. "Finish Cup" means drain it!</p>
+                </div>
+            </div>
+
+            <button class="start-btn" onclick="closeRules()">LET'S PLAY</button>
+        </div>
+    </div>
 
     <!-- Download Button -->
     <button class="download-btn" onclick="downloadCode()" title="Save to Computer">
@@ -300,7 +440,7 @@
         <div id="card" class="card" onclick="window.drawCard()">
             <div class="card-content">
                 <h2 id="category">TAP TO START</h2>
-                <p id="instruction">Gather the group.<br>Tap the card to draw.</p>
+                <p id="instruction">Gather the group.<br>Tap or Swipe to draw.</p>
                 
                 <!-- NEW SPINNER -->
                 <div class="spinner-container">
@@ -317,6 +457,16 @@
     </div>
 
     <script>
+        /* === RULES SYSTEM === */
+        function closeRules() {
+            const overlay = document.getElementById('rules-overlay');
+            overlay.classList.add('hidden');
+            // Init audio context on user interaction to handle autoplay policies
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
         /* === AUDIO SYSTEM === */
         let soundEnabled = true;
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
