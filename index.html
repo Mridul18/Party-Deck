@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The Party Deck</title>
+    <!-- Google Fonts for Party Vibe -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
     <style>
         /* === CSS STYLES === */
         * {
@@ -15,14 +20,24 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: #121212;
+            /* Animated Party Background */
+            background: linear-gradient(-45deg, #1a1a1a, #2c1e2e, #1e2c2e, #121212);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
             color: white;
             height: 100vh;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .game-container {
@@ -43,46 +58,59 @@
             max-height: 550px;
             background: linear-gradient(135deg, #2b2b2b, #1f1f1f);
             border-radius: 24px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             padding: 40px 30px;
             cursor: pointer;
-            transition: transform 0.1s ease, box-shadow 0.2s ease;
-            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
             overflow: hidden;
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+        }
+
+        /* The Flip Animation Class */
+        .card.is-flipping {
+            transform: rotateY(90deg) scale(0.9);
+            transition: transform 0.15s ease-in;
         }
 
         .card:active {
-            transform: scale(0.96);
+            transform: scale(0.98);
         }
 
         /* Typography */
         h2 {
-            font-size: 1.2rem;
-            letter-spacing: 3px;
+            font-family: 'Bangers', cursive; /* Fun font */
+            font-size: 2.5rem;
+            letter-spacing: 2px;
             text-transform: uppercase;
-            opacity: 0.7;
+            opacity: 0.9;
             margin-bottom: 20px;
-            font-weight: 800;
+            font-weight: 400;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
 
         p {
+            font-family: 'Inter', sans-serif;
             font-size: 1.8rem;
-            font-weight: 700;
-            line-height: 1.4;
+            font-weight: 800;
+            line-height: 1.3;
             word-wrap: break-word;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .card-footer {
-            font-size: 0.9rem;
-            opacity: 0.5;
+            font-size: 0.8rem;
+            opacity: 0.6;
             text-align: center;
-            border-top: 1px solid rgba(255,255,255,0.2);
+            border-top: 2px solid rgba(255,255,255,0.15);
             padding-top: 20px;
             letter-spacing: 1px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
 
         /* Download Button Styling */
@@ -93,35 +121,68 @@
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
             font-size: 0.8rem;
             cursor: pointer;
             z-index: 100;
-            transition: background 0.2s;
-            text-decoration: none;
+            transition: all 0.2s;
+            backdrop-filter: blur(5px);
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
 
         .download-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
         }
 
-        /* === DYNAMIC COLORS === */
+        /* === DYNAMIC COLORS & GRADIENTS === */
+        /* Added more vibrant gradients and subtle texture */
         .card.default { background: linear-gradient(135deg, #434343, #000000); }
-        .card.vote { background: linear-gradient(135deg, #4facfe, #00f2fe); color: #00334e; text-shadow: none; }
-        .card.challenge { background: linear-gradient(135deg, #ff0844, #ffb199); color: white; }
-        .card.rule { background: linear-gradient(135deg, #0ba360, #3cba92); color: white; }
-        .card.viral { background: linear-gradient(135deg, #b721ff, #21d4fd); color: white; }
-        .card.trivia { background: linear-gradient(135deg, #fccb90, #d57eeb); color: #2c0b40; }
-        .card.wild { background: linear-gradient(135deg, #30cfd0, #330867); color: white; }
-        .card.never { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        
+        .card.vote { 
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+            color: #00334e; 
+        }
+        
+        .card.challenge { 
+            background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); 
+            color: white; 
+        }
+        
+        .card.rule { 
+            background: linear-gradient(135deg, #09b366 0%, #3cba92 100%); 
+            color: white; 
+        }
+        
+        .card.viral { 
+            background: linear-gradient(135deg, #c471f5 0%, #fa71cd 100%); 
+            color: white; 
+        }
+        
+        .card.trivia { 
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); 
+            color: #4a1e00; 
+        }
+        
+        .card.wild { 
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); 
+            color: white; 
+        }
+        
+        .card.never { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+        }
 
-        @media (max-height: 600px) {
-            p { font-size: 1.5rem; }
-            .card { padding: 25px 20px; }
+        @media (max-height: 660px) {
+            p { font-size: 1.4rem; }
+            h2 { font-size: 1.8rem; }
+            .card { padding: 30px 25px; height: 70vh; }
         }
     </style>
 </head>
@@ -148,18 +209,14 @@
     <script>
         /* === DOWNLOAD FUNCTIONALITY === */
         function downloadCode() {
-            // Get the current HTML
             const htmlContent = document.documentElement.outerHTML;
-            // Create a blob
             const blob = new Blob([htmlContent], {type: 'text/html'});
             const url = URL.createObjectURL(blob);
-            // Create a temporary link to trigger download
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'party-deck-game.html'; // Filename
+            a.download = 'party-deck-game.html';
             document.body.appendChild(a);
             a.click();
-            // Cleanup
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
@@ -415,22 +472,37 @@
                 return;
             }
 
-            // Pop card from deck
-            const card = deck.pop();
+            // Prevent double-clicks during animation
+            if(cardElement.classList.contains('is-flipping')) return;
 
-            // 1. Update Text
-            categoryElement.innerText = card.type.toUpperCase();
-            instructionElement.innerText = card.text;
-            countElement.innerText = `${deck.length} cards remaining`;
+            // Start Flip OUT
+            cardElement.classList.add('is-flipping');
 
-            // 2. Update Colors
-            cardElement.className = 'card'; // Reset
-            cardElement.classList.add(card.type); // Add type class
-            
-            // 3. Vibration for mobile
-            if (navigator.vibrate) {
-                navigator.vibrate(50);
-            }
+            // Wait for half the animation (150ms) to change content
+            setTimeout(() => {
+                // Pop card from deck
+                const card = deck.pop();
+
+                // 1. Update Text
+                categoryElement.innerText = card.type.toUpperCase();
+                instructionElement.innerText = card.text;
+                countElement.innerText = `${deck.length} cards remaining`;
+
+                // 2. Update Colors (Remove old types, add new)
+                cardElement.className = 'card is-flipping'; // Keep flipping class
+                cardElement.classList.add(card.type); 
+                
+                // 3. Vibration
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+
+                // Wait for the change to render, then Flip IN
+                requestAnimationFrame(() => {
+                   cardElement.classList.remove('is-flipping');
+                });
+
+            }, 150);
         };
 
         // Start the engine
