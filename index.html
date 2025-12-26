@@ -55,14 +55,14 @@
             width: 100%;
             max-width: 380px;
             height: 65vh;
-            max-height: 550px;
+            max-height: 600px;
             background: linear-gradient(135deg, #2b2b2b, #1f1f1f);
             border-radius: 24px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 40px 30px;
+            padding: 30px 25px;
             cursor: pointer;
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
@@ -84,22 +84,54 @@
         /* Typography */
         h2 {
             font-family: 'Bangers', cursive; /* Fun font */
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             letter-spacing: 2px;
             text-transform: uppercase;
             opacity: 0.9;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             font-weight: 400;
             text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
 
         p {
             font-family: 'Inter', sans-serif;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 800;
             line-height: 1.3;
             word-wrap: break-word;
             text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            flex-grow: 1; /* Pushes spinner down */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* New Spinner Badge */
+        .spinner-container {
+            margin-top: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .spinner-badge {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-family: 'Bangers', cursive;
+            font-size: 1.4rem;
+            color: #ffd700; /* Gold */
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            letter-spacing: 1px;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .spinner-badge.pop {
+            transform: scale(1.2);
+            color: #fff;
+            background: rgba(255,255,255,0.2);
         }
 
         .card-footer {
@@ -107,10 +139,20 @@
             opacity: 0.6;
             text-align: center;
             border-top: 2px solid rgba(255,255,255,0.15);
-            padding-top: 20px;
+            padding-top: 15px;
             letter-spacing: 1px;
             font-weight: 600;
             text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sound-icon {
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.8;
+            padding: 5px;
         }
 
         /* Download Button Styling */
@@ -141,48 +183,20 @@
         }
 
         /* === DYNAMIC COLORS & GRADIENTS === */
-        /* Added more vibrant gradients and subtle texture */
         .card.default { background: linear-gradient(135deg, #434343, #000000); }
-        
-        .card.vote { 
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
-            color: #00334e; 
-        }
-        
-        .card.challenge { 
-            background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); 
-            color: white; 
-        }
-        
-        .card.rule { 
-            background: linear-gradient(135deg, #09b366 0%, #3cba92 100%); 
-            color: white; 
-        }
-        
-        .card.viral { 
-            background: linear-gradient(135deg, #c471f5 0%, #fa71cd 100%); 
-            color: white; 
-        }
-        
-        .card.trivia { 
-            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); 
-            color: #4a1e00; 
-        }
-        
-        .card.wild { 
-            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); 
-            color: white; 
-        }
-        
-        .card.never { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            color: white; 
-        }
+        .card.vote { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #00334e; }
+        .card.challenge { background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); color: white; }
+        .card.rule { background: linear-gradient(135deg, #09b366 0%, #3cba92 100%); color: white; }
+        .card.viral { background: linear-gradient(135deg, #c471f5 0%, #fa71cd 100%); color: white; }
+        .card.trivia { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #4a1e00; }
+        .card.wild { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white; }
+        .card.never { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
 
         @media (max-height: 660px) {
-            p { font-size: 1.4rem; }
+            p { font-size: 1.3rem; }
             h2 { font-size: 1.8rem; }
-            .card { padding: 30px 25px; height: 70vh; }
+            .card { padding: 20px 20px; height: 75vh; }
+            .spinner-badge { font-size: 1.1rem; padding: 6px 14px; }
         }
     </style>
 </head>
@@ -196,17 +210,101 @@
     <div class="game-container">
         <!-- We use onclick="window.drawCard()" to safely call the function -->
         <div id="card" class="card" onclick="window.drawCard()">
-            <div class="card-content">
+            <div class="card-content" style="height: 100%; display: flex; flex-direction: column;">
                 <h2 id="category">TAP TO START</h2>
                 <p id="instruction">Gather the group.<br>Tap the card to draw.</p>
+                
+                <!-- NEW SPINNER -->
+                <div class="spinner-container">
+                    <div id="drink-spinner" class="spinner-badge">🎰 ROLL PENALTY</div>
+                </div>
             </div>
+            
             <div class="card-footer">
+                <span id="sound-toggle" class="sound-icon" onclick="toggleSound(event)">🔊</span>
                 <span id="card-count">DECK LOADED</span>
+                <span></span> <!-- Spacer -->
             </div>
         </div>
     </div>
 
     <script>
+        /* === AUDIO SYSTEM === */
+        let soundEnabled = true;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function toggleSound(e) {
+            e.stopPropagation(); 
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-toggle');
+            icon.innerText = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function playPopSound() {
+            if (!soundEnabled) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.1);
+        }
+
+        /* === SPINNER LOGIC (NO SIPS, ONLY DRINKS/SHOTS) === */
+        const drinkOptions = [
+            { text: "1 Drink", weight: 40 },
+            { text: "2 Drinks", weight: 30 },
+            { text: "3 Drinks", weight: 15 },
+            { text: "Half Cup", weight: 10 },
+            { text: "1 Shot", weight: 5 },
+            { text: "Finish Cup", weight: 2 }, 
+            { text: "Water Break", weight: 5 }
+        ];
+
+        function getWeightedRandomDrink() {
+            const totalWeight = drinkOptions.reduce((acc, option) => acc + option.weight, 0);
+            let random = Math.random() * totalWeight;
+            
+            for (const option of drinkOptions) {
+                if (random < option.weight) return option.text;
+                random -= option.weight;
+            }
+            return "1 Drink";
+        }
+
+        function spinDrinkSpinner() {
+            const spinnerEl = document.getElementById('drink-spinner');
+            let iterations = 0;
+            const maxIterations = 8; // How many times it flicks before stopping
+            
+            const interval = setInterval(() => {
+                // Flash random text
+                const randomTemp = drinkOptions[Math.floor(Math.random() * drinkOptions.length)].text;
+                spinnerEl.innerText = randomTemp;
+                
+                iterations++;
+                if (iterations >= maxIterations) {
+                    clearInterval(interval);
+                    // Set Final Value
+                    const finalValue = getWeightedRandomDrink();
+                    spinnerEl.innerText = `🍺 ${finalValue}`;
+                    spinnerEl.classList.add('pop');
+                    setTimeout(() => spinnerEl.classList.remove('pop'), 200);
+                }
+            }, 50); // Speed of flicker
+        }
+
         /* === DOWNLOAD FUNCTIONALITY === */
         function downloadCode() {
             const htmlContent = document.documentElement.outerHTML;
@@ -221,9 +319,9 @@
             URL.revokeObjectURL(url);
         }
 
-        /* === GAME LOGIC & 200 CARDS === */
+        /* === GAME LOGIC & CARD DATABASE === */
         const allCards = [
-            // --- VOTE CARDS ---
+             // --- VOTE CARDS ---
             { type: "vote", text: "On 3, point to the person who is the worst driver. They drink." },
             { type: "vote", text: "Point to the person most likely to join a cult. They drink." },
             { type: "vote", text: "Point to the person who spends the most time on the toilet. They drink." },
@@ -254,6 +352,12 @@
             { type: "vote", text: "Who is most likely to trip on nothing? They drink." },
             { type: "vote", text: "Who has the most screen time? They drink." },
             { type: "vote", text: "Who is the 'Mom' or 'Dad' of the group? They give out a sip." },
+            { type: "vote", text: "Who would survive a horror movie? Most votes is safe. Everyone else drinks." },
+            { type: "vote", text: "Who has the best dance moves? They must demonstrate or drink." },
+            { type: "vote", text: "Who is secretly an alien? Point now. Accused drinks." },
+            { type: "vote", text: "Who is the worst cook? They drink." },
+            { type: "vote", text: "Who spends the most money? They drink." },
+            { type: "vote", text: "Who would be the first to die in the Hunger Games? They drink." },
 
             // --- VIRAL CARDS ---
             { type: "viral", text: "Let the group DM a random photo from your gallery to the 5th person in your DMs. Or finish your drink." },
@@ -276,6 +380,9 @@
             { type: "viral", text: "Reply to your last Instagram story viewer with 'Marry me?'. Or finish your drink." },
             { type: "viral", text: "Show the group your most used emoji. If it's 🍆 or 🍑, finish your drink." },
             { type: "viral", text: "Let the person to your left change your wallpaper. Keep it for 10 mins. Or drink." },
+            { type: "viral", text: "Post a Facebook status saying 'I'm pregnant' (or 'I got someone pregnant'). Leave for 10 mins. Or drink." },
+            { type: "viral", text: "DM your celebrity crush saying 'I cooked dinner, where are you?'. Or drink." },
+            { type: "viral", text: "Facetime the 3rd person in your contacts. If they answer, they drink. If not, you drink." },
 
             // --- RULE CARDS ---
             { type: "rule", text: "BUFFALO: Drink with your non-dominant hand. If caught, chug." },
@@ -298,6 +405,9 @@
             { type: "rule", text: "REPEAT: You must repeat everything you say twice. Fail = Drink." },
             { type: "rule", text: "SONG: Whenever you drink, you must hum a tune. Fail = Drink." },
             { type: "rule", text: "THE CLAW: You must hold your drink like a claw machine claw. Fail = Drink." },
+            { type: "rule", text: "WHISPER: You can only whisper until your next turn. Punishment: Drink." },
+            { type: "rule", text: "EYE CONTACT: If you make eye contact with anyone, you both drink." },
+            { type: "rule", text: "NO PRONOUNS: You cannot say 'I', 'You', 'He', 'She', 'They'. Punishment: Drink." },
 
             // --- CHALLENGE CARDS ---
             { type: "challenge", text: "Floor is lava! Last person to lift feet off ground drinks." },
@@ -325,6 +435,10 @@
             { type: "challenge", text: "Drink without using your hands." },
             { type: "challenge", text: "Everyone touch the ceiling. Last one drinks." },
             { type: "challenge", text: "Act like a chicken for 30 seconds. Refuse? Finish drink." },
+            { type: "challenge", text: "Human Pyramid: Form a pyramid with 2 other people. If you fail, all 3 drink." },
+            { type: "challenge", text: "Rap Battle: Freestyle for 20 seconds. If you stop, drink." },
+            { type: "challenge", text: "Dance Battle: You vs person to your left. Group judges. Loser drinks." },
+            { type: "challenge", text: "Invisible Chair: Sit against the wall for 45s. Fail = Drink." },
 
             // --- TRIVIA CARDS ---
             { type: "trivia", text: "Category: CEREAL BRANDS. Go around circle. First to hesitate/repeat drinks." },
@@ -352,6 +466,9 @@
             { type: "trivia", text: "Rhyme time: Word is 'BLUE'. Go around circle. Fail = Drink." },
             { type: "trivia", text: "Category: SUPERHEROES. Go around circle. Fail = Drink." },
             { type: "trivia", text: "Category: DOG BREEDS. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Category: COUNTRIES starting with 'A'. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Name 3 bald celebrities in 10s. Fail = Drink." },
+            { type: "trivia", text: "Category: THINGS IN A BEDROOM. Go around circle. Fail = Drink." },
 
             // --- WILD CARDS ---
             { type: "wild", text: "Everyone with glasses drinks." },
@@ -394,6 +511,10 @@
             { type: "wild", text: "If you're wearing lipstick, drink." },
             { type: "wild", text: "Anyone who has ever broken a bone, drink." },
             { type: "wild", text: "Anyone who can speak 2+ languages, drink." },
+            { type: "wild", text: "Everyone swap left shoe with person to right. Wear it." },
+            { type: "wild", text: "Anyone touching their face right now drinks." },
+            { type: "wild", text: "Last person to raise their hand drinks." },
+            { type: "wild", text: "Group Selfie! If you refuse, drink." },
 
             // --- NEVER HAVE I EVER ---
             { type: "never", text: "Never Have I Ever: Been arrested. If you have, drink." },
@@ -477,6 +598,9 @@
 
             // Start Flip OUT
             cardElement.classList.add('is-flipping');
+            
+            // Play Sound
+            playPopSound();
 
             // Wait for half the animation (150ms) to change content
             setTimeout(() => {
@@ -492,7 +616,10 @@
                 cardElement.className = 'card is-flipping'; // Keep flipping class
                 cardElement.classList.add(card.type); 
                 
-                // 3. Vibration
+                // 3. Spin the Drink Quantity
+                spinDrinkSpinner();
+
+                // 4. Vibration
                 if (navigator.vibrate) {
                     navigator.vibrate(50);
                 }
