@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Party Deck</title>
+    <style>
+        /* === CSS STYLES === */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            perspective: 1000px;
+        }
+
+        /* Card Styling */
+        .card {
+            width: 100%;
+            max-width: 380px;
+            height: 65vh;
+            max-height: 550px;
+            background: linear-gradient(135deg, #2b2b2b, #1f1f1f);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px 30px;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:active {
+            transform: scale(0.96);
+        }
+
+        /* Typography */
+        h2 {
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: 0.7;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+
+        p {
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .card-footer {
+            font-size: 0.9rem;
+            opacity: 0.5;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            padding-top: 20px;
+            letter-spacing: 1px;
+        }
+
+        /* Download Button Styling */
+        .download-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            z-index: 100;
+            transition: background 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .download-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* === DYNAMIC COLORS === */
+        .card.default { background: linear-gradient(135deg, #434343, #000000); }
+        .card.vote { background: linear-gradient(135deg, #4facfe, #00f2fe); color: #00334e; text-shadow: none; }
+        .card.challenge { background: linear-gradient(135deg, #ff0844, #ffb199); color: white; }
+        .card.rule { background: linear-gradient(135deg, #0ba360, #3cba92); color: white; }
+        .card.viral { background: linear-gradient(135deg, #b721ff, #21d4fd); color: white; }
+        .card.trivia { background: linear-gradient(135deg, #fccb90, #d57eeb); color: #2c0b40; }
+        .card.wild { background: linear-gradient(135deg, #30cfd0, #330867); color: white; }
+        .card.never { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+
+        @media (max-height: 600px) {
+            p { font-size: 1.5rem; }
+            .card { padding: 25px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Download Button -->
+    <button class="download-btn" onclick="downloadCode()" title="Save to Computer">
+        ⬇️ Save App
+    </button>
+
+    <div class="game-container">
+        <!-- We use onclick="window.drawCard()" to safely call the function -->
+        <div id="card" class="card" onclick="window.drawCard()">
+            <div class="card-content">
+                <h2 id="category">TAP TO START</h2>
+                <p id="instruction">Gather the group.<br>Tap the card to draw.</p>
+            </div>
+            <div class="card-footer">
+                <span id="card-count">DECK LOADED</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* === DOWNLOAD FUNCTIONALITY === */
+        function downloadCode() {
+            // Get the current HTML
+            const htmlContent = document.documentElement.outerHTML;
+            // Create a blob
+            const blob = new Blob([htmlContent], {type: 'text/html'});
+            const url = URL.createObjectURL(blob);
+            // Create a temporary link to trigger download
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'party-deck-game.html'; // Filename
+            document.body.appendChild(a);
+            a.click();
+            // Cleanup
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        /* === GAME LOGIC & 200 CARDS === */
+        const allCards = [
+            // --- VOTE CARDS ---
+            { type: "vote", text: "On 3, point to the person who is the worst driver. They drink." },
+            { type: "vote", text: "Point to the person most likely to join a cult. They drink." },
+            { type: "vote", text: "Point to the person who spends the most time on the toilet. They drink." },
+            { type: "vote", text: "Who would die first in a zombie apocalypse? Point to them. They drink." },
+            { type: "vote", text: "Who is the biggest gossip? Vote now. Winner drinks." },
+            { type: "vote", text: "Who has the worst taste in music? Point to them. They drink." },
+            { type: "vote", text: "Who is most likely to become a billionaire? They drink out of respect." },
+            { type: "vote", text: "Who takes the longest to get ready? Point to them. They drink." },
+            { type: "vote", text: "Who is the most likely to get arrested? They drink." },
+            { type: "vote", text: "Who checks themselves in the mirror the most? They drink." },
+            { type: "vote", text: "Who is the best liar? Point to them. They drink." },
+            { type: "vote", text: "Who would survive the longest on a desert island? They give out 2 sips." },
+            { type: "vote", text: "Who is the pickiest eater? They drink." },
+            { type: "vote", text: "Who is most likely to marry for money? They drink." },
+            { type: "vote", text: "Who laughs at the worst moments? They drink." },
+            { type: "vote", text: "Who is most likely to sleep through their alarm? They drink." },
+            { type: "vote", text: "Who uses their phone the most while drunk? They drink." },
+            { type: "vote", text: "Who is the worst at texting back? Vote now. They drink." },
+            { type: "vote", text: "Who has the best fashion sense? They give out 2 sips." },
+            { type: "vote", text: "Who is the clumsiest? Point to them. They drink." },
+            { type: "vote", text: "Who is most likely to cry tonight? They drink." },
+            { type: "vote", text: "Who is the biggest lightweight? They drink." },
+            { type: "vote", text: "Who has the most exes? They drink." },
+            { type: "vote", text: "Who is the most responsible drunk? They give out a sip." },
+            { type: "vote", text: "Who would you trust to hide a body? They give out a sip." },
+            { type: "vote", text: "Who is most likely to hook up with a stranger? They drink." },
+            { type: "vote", text: "Who has the worst laugh? They drink." },
+            { type: "vote", text: "Who is most likely to trip on nothing? They drink." },
+            { type: "vote", text: "Who has the most screen time? They drink." },
+            { type: "vote", text: "Who is the 'Mom' or 'Dad' of the group? They give out a sip." },
+
+            // --- VIRAL CARDS ---
+            { type: "viral", text: "Let the group DM a random photo from your gallery to the 5th person in your DMs. Or finish your drink." },
+            { type: "viral", text: "Show the group your screen time. If it's over 4 hours today, drink." },
+            { type: "viral", text: "Read the last text you sent to your mom out loud. Or drink." },
+            { type: "viral", text: "Let the person to your right tweet anything from your account. Or finish your drink." },
+            { type: "viral", text: "Show the last photo you deleted from your gallery. Or drink." },
+            { type: "viral", text: "Call the first person in your contacts and sing 'Happy Birthday' to them. Or finish your drink." },
+            { type: "viral", text: "Change your WhatsApp/Insta bio to 'I love feet' for 1 hour. Or finish your drink." },
+            { type: "viral", text: "Show your search history. Or finish your drink." },
+            { type: "viral", text: "Let the group scroll through your camera roll for 10 seconds. Or drink." },
+            { type: "viral", text: "Send a heart emoji to the last person you texted (excluding group chats). Or drink." },
+            { type: "viral", text: "Post a selfie with the caption 'I'm so lonely' on your story. Or finish your drink." },
+            { type: "viral", text: "Like the first 5 posts on your ex's Instagram. Or finish your drink." },
+            { type: "viral", text: "Let the group choose a contact for you to call. You must talk for 1 minute. Or finish your drink." },
+            { type: "viral", text: "Show your last Amazon purchase. If embarrassing, drink." },
+            { type: "viral", text: "Read your last DM out loud. Or drink." },
+            { type: "viral", text: "Send a text saying 'I know what you did' to a random number. Or drink." },
+            { type: "viral", text: "Let the group look at your blocked list. Or drink." },
+            { type: "viral", text: "Reply to your last Instagram story viewer with 'Marry me?'. Or finish your drink." },
+            { type: "viral", text: "Show the group your most used emoji. If it's 🍆 or 🍑, finish your drink." },
+            { type: "viral", text: "Let the person to your left change your wallpaper. Keep it for 10 mins. Or drink." },
+
+            // --- RULE CARDS ---
+            { type: "rule", text: "BUFFALO: Drink with your non-dominant hand. If caught, chug." },
+            { type: "rule", text: "LITTLE GREEN MAN: Remove a tiny imaginary man from your cup rim before drinking. Forget? Drink again." },
+            { type: "rule", text: "NAMES: You cannot call anyone by their name. Punishment: Drink." },
+            { type: "rule", text: "TEETH: You cannot show your teeth when you laugh. Punishment: Drink." },
+            { type: "rule", text: "SILENCE: Complete silence for one minute. First to noise drinks." },
+            { type: "rule", text: "NICKNAMES: Give the person to your left a nickname. They must keep it. Fail = Drink." },
+            { type: "rule", text: "NO PHONES: Anyone who touches their phone in the next 3 rounds finishes their drink." },
+            { type: "rule", text: "THE KING: You can make one person drink whenever you drink. Lasts 3 rounds." },
+            { type: "rule", text: "FOREHEAD MASTER: Whenever your forehead touches the table, everyone must copy. Last one drinks." },
+            { type: "rule", text: "QUESTION MASTER: If you ask a question and someone answers, they drink." },
+            { type: "rule", text: "THE FLOOR IS LAVA: Whenever you stand on a chair, everyone must get off the floor. Last one drinks." },
+            { type: "rule", text: "ACCENT: You must speak in a British accent until your next turn. Fail = Drink." },
+            { type: "rule", text: "PARTNER: Choose a mate. Whenever they drink, you drink." },
+            { type: "rule", text: "T-REX: You must keep your elbows tucked into your sides like a T-Rex. Fail = Drink." },
+            { type: "rule", text: "NO POINTING: Anyone who points a finger must drink." },
+            { type: "rule", text: "SERIOUS FACE: You cannot smile. If you smile, you drink." },
+            { type: "rule", text: "GHOST: No one can acknowledge you or talk to you. If they do, they drink." },
+            { type: "rule", text: "REPEAT: You must repeat everything you say twice. Fail = Drink." },
+            { type: "rule", text: "SONG: Whenever you drink, you must hum a tune. Fail = Drink." },
+            { type: "rule", text: "THE CLAW: You must hold your drink like a claw machine claw. Fail = Drink." },
+
+            // --- CHALLENGE CARDS ---
+            { type: "challenge", text: "Floor is lava! Last person to lift feet off ground drinks." },
+            { type: "challenge", text: "Staring contest with person to right. Loser drinks." },
+            { type: "challenge", text: "Thumb Master: Place thumb on table. Last to copy drinks. (Hold power until used)." },
+            { type: "challenge", text: "Say alphabet backwards. Fail before 'M'? Drink." },
+            { type: "challenge", text: "Do 10 pushups. Fail? Drink twice. Succeed? Give 2 sips." },
+            { type: "challenge", text: "Plank for 30 seconds. Drop? Finish drink." },
+            { type: "challenge", text: "Arm wrestle person to left. Loser drinks." },
+            { type: "challenge", text: "Lick your elbow. Fail? Drink. Succeed? Everyone finishes drink." },
+            { type: "challenge", text: "Stand on one leg until next turn. Touch ground? Drink." },
+            { type: "challenge", text: "Balance spoon on nose for 10s. Fail = Drink." },
+            { type: "challenge", text: "First to touch something blue is safe. Last drinks." },
+            { type: "challenge", text: "Everyone swap seats. Last person sat drinks." },
+            { type: "challenge", text: "Spin around 10 times then try to walk in a straight line. Fail = Drink." },
+            { type: "challenge", text: "Wall sit for 30 seconds. Fail = Drink." },
+            { type: "challenge", text: "Try to touch your toes. Can't? Drink." },
+            { type: "challenge", text: "Rock Paper Scissors with person to right. Loser drinks." },
+            { type: "challenge", text: "Do your best impression of a celebrity. Group votes. If bad, drink." },
+            { type: "challenge", text: "Hold your breath for 20 seconds. Fail = Drink." },
+            { type: "challenge", text: "Let the group pose you. You must stay like that for one round. Fail = Drink." },
+            { type: "challenge", text: "Do a handstand (against a wall is fine). Fail = Drink." },
+            { type: "challenge", text: "Touch your nose with your tongue. Fail = Drink." },
+            { type: "challenge", text: "Make the person to your left laugh. You have 30s. Fail = Drink." },
+            { type: "challenge", text: "Drink without using your hands." },
+            { type: "challenge", text: "Everyone touch the ceiling. Last one drinks." },
+            { type: "challenge", text: "Act like a chicken for 30 seconds. Refuse? Finish drink." },
+
+            // --- TRIVIA CARDS ---
+            { type: "trivia", text: "Category: CEREAL BRANDS. Go around circle. First to hesitate/repeat drinks." },
+            { type: "trivia", text: "Category: CAR BRANDS. Go around circle. First to hesitate/repeat drinks." },
+            { type: "trivia", text: "Category: POKEMON. Go around circle. First to hesitate/repeat drinks." },
+            { type: "trivia", text: "Category: SEX POSITIONS. Go around circle. First to hesitate/repeat drinks." },
+            { type: "trivia", text: "Category: HARRY POTTER CHARACTERS. Go around circle. First to hesitate/repeat drinks." },
+            { type: "trivia", text: "Category: CIGARETTE BRANDS. Go around circle. First to hesitate/repeat drinks." },
+            { type: "trivia", text: "Category: CAPITALS. Go around circle. First to hesitate/repeat drinks." },
+            { type: "trivia", text: "Rhyme time: Word is 'DRUNK'. Go around circle. First to fail drinks." },
+            { type: "trivia", text: "Rhyme time: Word is 'TIGHT'. Go around circle. First to fail drinks." },
+            { type: "trivia", text: "Name 5 US Presidents in 10s. Fail = Drink." },
+            { type: "trivia", text: "Name 3 Taylor Swift songs. Fail = Drink." },
+            { type: "trivia", text: "Category: PIZZA TOPPINGS. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Category: BEER BRANDS. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Category: CLOTHING BRANDS. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Rhyme time: Word is 'CAT'. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Category: HORROR MOVIES. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Category: BODILY FLUIDS. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Category: SWEAR WORDS. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Name 3 planets in 5 seconds. Fail = Drink." },
+            { type: "trivia", text: "Spell 'RHYTHM' backwards. Fail = Drink." },
+            { type: "trivia", text: "Category: VEGETABLES. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Category: SOCIAL MEDIA APPS. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Rhyme time: Word is 'BLUE'. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Category: SUPERHEROES. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Category: DOG BREEDS. Go around circle. Fail = Drink." },
+
+            // --- WILD CARDS ---
+            { type: "wild", text: "Everyone with glasses drinks." },
+            { type: "wild", text: "Everyone who is single drinks." },
+            { type: "wild", text: "The tallest person drinks." },
+            { type: "wild", text: "The shortest person drinks." },
+            { type: "wild", text: "If you have an iPhone, drink. Androids safe." },
+            { type: "wild", text: "If you are wearing white socks, drink." },
+            { type: "wild", text: "Everyone who has hooked up with someone in this room drinks." },
+            { type: "wild", text: "Waterfall! Start drinking. Person to left can't stop until you stop." },
+            { type: "wild", text: "If you have a tattoo, drink." },
+            { type: "wild", text: "If you have a piercing (not ears), drink." },
+            { type: "wild", text: "Roll a virtual dice (guess 1-6). Wrong? Drink." },
+            { type: "wild", text: "Swap drinks with person to right for one round." },
+            { type: "wild", text: "Medusa: Heads down. On 3, look up at someone. Eye contact? Both drink." },
+            { type: "wild", text: "If you are wearing jeans, drink." },
+            { type: "wild", text: "If battery under 20%, drink." },
+            { type: "wild", text: "Guys drink." },
+            { type: "wild", text: "Girls drink." },
+            { type: "wild", text: "Everyone drinks." },
+            { type: "wild", text: "Whoever arrived last drinks." },
+            { type: "wild", text: "Whoever is oldest drinks." },
+            { type: "wild", text: "Whoever is youngest drinks." },
+            { type: "wild", text: "If you have a sibling, drink." },
+            { type: "wild", text: "If you've ever been to Europe, drink." },
+            { type: "wild", text: "If you're wearing black, drink." },
+            { type: "wild", text: "If you have paint on your nails, drink." },
+            { type: "wild", text: "If you're in a relationship, drink." },
+            { type: "wild", text: "Everyone takes a shot." },
+            { type: "wild", text: "Person with the longest hair drinks." },
+            { type: "wild", text: "Person with the shortest hair drinks." },
+            { type: "wild", text: "If you have blue eyes, drink." },
+            { type: "wild", text: "If you have brown eyes, drink." },
+            { type: "wild", text: "If you're wearing a watch, drink." },
+            { type: "wild", text: "If you have a job, drink." },
+            { type: "wild", text: "If you're unemployed, drink." },
+            { type: "wild", text: "If you drove here, DON'T drink. Everyone else drinks." },
+            { type: "wild", text: "If you're wearing a belt, drink." },
+            { type: "wild", text: "If you have a beard, drink." },
+            { type: "wild", text: "If you're wearing lipstick, drink." },
+            { type: "wild", text: "Anyone who has ever broken a bone, drink." },
+            { type: "wild", text: "Anyone who can speak 2+ languages, drink." },
+
+            // --- NEVER HAVE I EVER ---
+            { type: "never", text: "Never Have I Ever: Been arrested. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Cheated on a test. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Skinny dipped. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Puked in an Uber. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Sent a risky text to wrong person. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Lied about age. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Used fake ID. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Ghosted someone. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Stalked ex's new partner. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Faked an orgasm. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Slept with coworker. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Peed in a pool. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Kissed >1 person in 24h. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Been kicked out of a bar. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Stolen something. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Dated a friend's ex. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Cried in public. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Lied to get out of a date. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Forgotten a partner's birthday. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Snooped on a partner's phone. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Had a one-night stand. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Sent a nude. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Received a nude. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Lied in this game. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Gotten a tattoo I regret. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Sang karaoke sober. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Eaten food out of the trash. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Peed in the shower. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Texted an ex while drunk. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Slid into DMs. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Hooked up in a car. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Been suspended from school. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Used someone else's toothbrush. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Fallen asleep in a bar. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Dined and dashed. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Had a crush on a teacher. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Re-gifted a gift. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Lied on a resume. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Been to a strip club. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Had a paranormal experience. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Broken the law. If you have, drink." }
+        ];
+
+        let deck = [];
+        const cardElement = document.getElementById('card');
+        const categoryElement = document.getElementById('category');
+        const instructionElement = document.getElementById('instruction');
+        const countElement = document.getElementById('card-count');
+
+        // Fisher-Yates Shuffle Algorithm
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Initialize Game
+        function initGame() {
+            deck = shuffle([...allCards]);
+        }
+
+        // We attach this to window so the HTML onclick="window.drawCard()" can find it
+        window.drawCard = function() {
+            // Check if deck is empty
+            if (deck.length === 0) {
+                categoryElement.innerText = "GAME OVER";
+                instructionElement.innerText = "You finished the whole deck! Refresh to play again.";
+                cardElement.className = "card default"; // Reset color
+                countElement.innerText = "0 Cards Left";
+                return;
+            }
+
+            // Pop card from deck
+            const card = deck.pop();
+
+            // 1. Update Text
+            categoryElement.innerText = card.type.toUpperCase();
+            instructionElement.innerText = card.text;
+            countElement.innerText = `${deck.length} cards remaining`;
+
+            // 2. Update Colors
+            cardElement.className = 'card'; // Reset
+            cardElement.classList.add(card.type); // Add type class
+            
+            // 3. Vibration for mobile
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        };
+
+        // Start the engine
+        initGame();
+    </script>
+</body>
+</html>
