@@ -365,10 +365,10 @@
             let random = Math.random() * totalWeight;
             
             for (const option of drinkOptions) {
-                if (random < option.weight) return option;
+                if (random < option.weight) return option.text;
                 random -= option.weight;
             }
-            return drinkOptions[0];
+            return drinkOptions[0].text;
         }
 
         function spinDrinkSpinner() {
@@ -386,7 +386,7 @@
                     clearInterval(interval);
                     
                     const result = getWeightedRandomDrink();
-                    spinnerEl.innerText = `🍺 ${result.text}`;
+                    spinnerEl.innerText = `🍺 ${result}`;
                     spinnerEl.classList.add('pop');
                     
                     setTimeout(() => spinnerEl.classList.remove('pop'), 200);
@@ -409,6 +409,16 @@
         }
 
         /* === GAME LOGIC & CARD DATABASE === */
+        const categoryIcons = {
+            vote: "🫵",
+            viral: "📱",
+            rule: "📜",
+            challenge: "⚡",
+            trivia: "🧠",
+            wild: "🃏",
+            never: "🤫"
+        };
+
         const allCards = [
              // --- VOTE CARDS ---
             { type: "vote", text: "On 3, point to the person who is the worst driver. They drink." },
@@ -671,6 +681,27 @@
             deck = shuffle([...allCards]);
         }
 
+        /* === SWIPE GESTURES === */
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        cardElement.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, false);
+
+        cardElement.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, false);
+
+        function handleSwipe() {
+            // Check if swipe distance is significant enough (e.g. 50px)
+            if (Math.abs(touchEndX - touchStartX) > 50) {
+                // Trigger draw regardless of direction (left or right)
+                window.drawCard();
+            }
+        }
+
         // We attach this to window so the HTML onclick="window.drawCard()" can find it
         window.drawCard = function() {
             // Check if deck is empty
@@ -696,8 +727,9 @@
                 // Pop card from deck
                 const card = deck.pop();
 
-                // 1. Update Text
-                categoryElement.innerText = card.type.toUpperCase();
+                // 1. Update Text & Icon
+                const icon = categoryIcons[card.type] || "✨";
+                categoryElement.innerText = `${icon} ${card.type.toUpperCase()}`;
                 instructionElement.innerText = card.text;
                 countElement.innerText = `${deck.length} cards remaining`;
 
