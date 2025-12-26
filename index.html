@@ -138,15 +138,17 @@
             justify-content: center;
         }
 
-        /* Dark Glass Spinner */
+        /* Dark Glass Spinner & Gamble */
         .spinner-container {
             margin-top: auto; 
             margin-bottom: 5px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
             width: 100%;
             position: relative;
             z-index: 2;
+            gap: 10px;
         }
 
         .spinner-badge {
@@ -173,6 +175,37 @@
             border-color: rgba(255, 255, 255, 0.5);
             color: #fff;
             box-shadow: 0 0 25px rgba(255, 215, 0, 0.2);
+        }
+
+        /* Gamble Button */
+        .gamble-btn {
+            background: linear-gradient(135deg, #ff4b1f, #ff9068);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 75, 31, 0.4);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .gamble-btn.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .gamble-btn:active {
+            transform: scale(0.95);
         }
 
         .card-footer {
@@ -442,9 +475,12 @@
                 <h2 id="category">TAP TO START</h2>
                 <p id="instruction">Gather the group.<br>Tap or Swipe to draw.</p>
                 
-                <!-- NEW SPINNER -->
+                <!-- NEW SPINNER & GAMBLE -->
                 <div class="spinner-container">
                     <div id="drink-spinner" class="spinner-badge">🎰 ROLL PENALTY</div>
+                    <button id="gamble-btn" class="gamble-btn" onclick="triggerGamble(event)">
+                        🎲 Double or Nothing?
+                    </button>
                 </div>
             </div>
             
@@ -497,33 +533,49 @@
                 oscillator.start();
                 oscillator.stop(audioCtx.currentTime + 0.1);
             }
+            if (type === 'coin') {
+                // High ping sound
+                oscillator.type = 'triangle';
+                oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            }
         }
 
-        /* === SPINNER LOGIC (NO SIPS, ONLY DRINKS/SHOTS) === */
+        /* === SPINNER & GAMBLE LOGIC === */
         const drinkOptions = [
-            { text: "1 Drink", weight: 40 },
-            { text: "2 Drinks", weight: 30 },
-            { text: "3 Drinks", weight: 15 },
-            { text: "Half Cup", weight: 10 },
-            { text: "1 Shot", weight: 5 },
-            { text: "Finish Cup", weight: 2 }, 
-            { text: "Water Break", weight: 5 }
+            { text: "1 Drink", double: "2 Drinks", weight: 40, canGamble: true },
+            { text: "2 Drinks", double: "4 Drinks", weight: 30, canGamble: true },
+            { text: "3 Drinks", double: "6 Drinks", weight: 15, canGamble: true },
+            { text: "Half Cup", double: "Full Cup", weight: 10, canGamble: true },
+            { text: "1 Shot", double: "2 Shots", weight: 5, canGamble: true },
+            { text: "Finish Cup", double: null, weight: 2, canGamble: false }, 
+            { text: "Water Break", double: null, weight: 5, canGamble: false }
         ];
+
+        let currentDrinkResult = null; // Store current roll for gambling
 
         function getWeightedRandomDrink() {
             const totalWeight = drinkOptions.reduce((acc, option) => acc + option.weight, 0);
             let random = Math.random() * totalWeight;
             
             for (const option of drinkOptions) {
-                if (random < option.weight) return option.text;
+                if (random < option.weight) return option;
                 random -= option.weight;
             }
-            return drinkOptions[0].text;
+            return drinkOptions[0];
         }
 
         function spinDrinkSpinner() {
             const spinnerEl = document.getElementById('drink-spinner');
+            const gambleBtn = document.getElementById('gamble-btn');
             
+            // Hide gamble button while spinning
+            gambleBtn.classList.remove('visible');
+
             let iterations = 0;
             const maxIterations = 8; 
             
@@ -535,13 +587,51 @@
                 if (iterations >= maxIterations) {
                     clearInterval(interval);
                     
-                    const result = getWeightedRandomDrink();
-                    spinnerEl.innerText = `🍺 ${result}`;
+                    currentDrinkResult = getWeightedRandomDrink();
+                    spinnerEl.innerText = `🍺 ${currentDrinkResult.text}`;
                     spinnerEl.classList.add('pop');
                     
                     setTimeout(() => spinnerEl.classList.remove('pop'), 200);
+
+                    // Show Gamble Button if applicable
+                    if (currentDrinkResult.canGamble) {
+                        setTimeout(() => gambleBtn.classList.add('visible'), 300);
+                    }
                 }
             }, 50);
+        }
+
+        function triggerGamble(e) {
+            e.stopPropagation(); // Don't flip card
+            const spinnerEl = document.getElementById('drink-spinner');
+            const gambleBtn = document.getElementById('gamble-btn');
+            
+            // UI Feedback
+            gambleBtn.classList.remove('visible'); // Hide button
+            spinnerEl.innerText = "🪙 FLIPPING...";
+            playSound('coin');
+
+            setTimeout(() => {
+                const isHeads = Math.random() > 0.5;
+                
+                if (isHeads) {
+                    // HEADS = SAFE
+                    spinnerEl.innerText = "✨ SAFE! (0 Drinks)";
+                    spinnerEl.style.borderColor = "#4facfe"; // Blue/Safe color
+                } else {
+                    // TAILS = DOUBLED
+                    spinnerEl.innerText = `💀 ${currentDrinkResult.double}`;
+                    spinnerEl.style.borderColor = "#ff0844"; // Red/Danger color
+                }
+                
+                spinnerEl.classList.add('pop');
+                setTimeout(() => {
+                    spinnerEl.classList.remove('pop');
+                    // Reset border color after delay (optional, or keep it until next spin)
+                    setTimeout(() => spinnerEl.style.borderColor = "rgba(255,255,255,0.15)", 2000);
+                }, 200);
+
+            }, 800);
         }
 
         /* === DOWNLOAD FUNCTIONALITY === */
@@ -607,6 +697,14 @@
             { type: "vote", text: "Who is the worst cook? They drink." },
             { type: "vote", text: "Who spends the most money? They drink." },
             { type: "vote", text: "Who would be the first to die in the Hunger Games? They drink." },
+            { type: "vote", text: "Who is most likely to get lost in their own neighborhood? Point to them. They drink." },
+            { type: "vote", text: "Who would be the worst roommate? Vote now. Loser drinks." },
+            { type: "vote", text: "Who is most likely to marry a stranger in Vegas? They drink." },
+            { type: "vote", text: "Who is most likely to become a TikTok star? They drink." },
+            { type: "vote", text: "Who gives the best advice? They are safe. Everyone else drinks." },
+            { type: "vote", text: "Who is most likely to date a celebrity? They drink." },
+            { type: "vote", text: "Who has the best smile? They give out 2 drinks." },
+            { type: "vote", text: "Who is the most dramatic? They drink." },
 
             // --- VIRAL CARDS ---
             { type: "viral", text: "Let the group DM a random photo from your gallery to the 5th person in your DMs. Or finish your drink." },
@@ -632,6 +730,10 @@
             { type: "viral", text: "Post a Facebook status saying 'I'm pregnant' (or 'I got someone pregnant'). Leave for 10 mins. Or drink." },
             { type: "viral", text: "DM your celebrity crush saying 'I cooked dinner, where are you?'. Or drink." },
             { type: "viral", text: "Facetime the 3rd person in your contacts. If they answer, they drink. If not, you drink." },
+            { type: "viral", text: "Text your ex 'I still have your sweater'. Or finish your drink." },
+            { type: "viral", text: "Let the group pick a photo to post on your story for 5 minutes. Or drink." },
+            { type: "viral", text: "Like a photo of your ex's new partner. Or finish your drink." },
+            { type: "viral", text: "Send a voice note singing a song to the last person you texted. Or drink." },
 
             // --- RULE CARDS ---
             { type: "rule", text: "BUFFALO: Drink with your non-dominant hand. If caught, chug." },
@@ -657,6 +759,10 @@
             { type: "rule", text: "WHISPER: You can only whisper until your next turn. Punishment: Drink." },
             { type: "rule", text: "EYE CONTACT: If you make eye contact with anyone, you both drink." },
             { type: "rule", text: "NO PRONOUNS: You cannot say 'I', 'You', 'He', 'She', 'They'. Punishment: Drink." },
+            { type: "rule", text: "FOREIGNER: You must speak with a fake accent of the group's choice. Fail = Drink." },
+            { type: "rule", text: "NO TEETH: You cannot show your teeth when you speak or laugh. Fail = Drink." },
+            { type: "rule", text: "LEFT HAND: You must only use your left hand for everything. Fail = Drink." },
+            { type: "rule", text: "NO SWEARING: Anyone who swears must drink." },
 
             // --- CHALLENGE CARDS ---
             { type: "challenge", text: "Floor is lava! Last person to lift feet off ground drinks." },
@@ -688,6 +794,10 @@
             { type: "challenge", text: "Rap Battle: Freestyle for 20 seconds. If you stop, drink." },
             { type: "challenge", text: "Dance Battle: You vs person to your left. Group judges. Loser drinks." },
             { type: "challenge", text: "Invisible Chair: Sit against the wall for 45s. Fail = Drink." },
+            { type: "challenge", text: "Statue: Freeze in your current position until your next turn. Move = Drink." },
+            { type: "challenge", text: "Thumb War: Challenge the person to your right. Loser drinks." },
+            { type: "challenge", text: "Ninja: Everyone strike a ninja pose. Last one drinks." },
+            { type: "challenge", text: "Balance a book on your head for 1 minute. Drop = Drink." },
 
             // --- TRIVIA CARDS ---
             { type: "trivia", text: "Category: CEREAL BRANDS. Go around circle. First to hesitate/repeat drinks." },
@@ -718,6 +828,10 @@
             { type: "trivia", text: "Category: COUNTRIES starting with 'A'. Go around circle. Fail = Drink." },
             { type: "trivia", text: "Name 3 bald celebrities in 10s. Fail = Drink." },
             { type: "trivia", text: "Category: THINGS IN A BEDROOM. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Name 3 Kardashians in 5 seconds. Fail = Drink." },
+            { type: "trivia", text: "Spell 'Embarrassing' correctly. Fail = Drink." },
+            { type: "trivia", text: "Category: FRUITS. Go around circle. Fail = Drink." },
+            { type: "trivia", text: "Name 3 movies starring Tom Cruise in 10s. Fail = Drink." },
 
             // --- WILD CARDS ---
             { type: "wild", text: "Everyone with glasses drinks." },
@@ -764,6 +878,10 @@
             { type: "wild", text: "Anyone touching their face right now drinks." },
             { type: "wild", text: "Last person to raise their hand drinks." },
             { type: "wild", text: "Group Selfie! If you refuse, drink." },
+            { type: "wild", text: "Everyone who is taller than you drinks." },
+            { type: "wild", text: "Everyone who is shorter than you drinks." },
+            { type: "wild", text: "If you are wearing jeans, drink." },
+            { type: "wild", text: "If you have a pet, drink." },
 
             // --- NEVER HAVE I EVER ---
             { type: "never", text: "Never Have I Ever: Been arrested. If you have, drink." },
@@ -806,7 +924,11 @@
             { type: "never", text: "Never Have I Ever: Lied on a resume. If you have, drink." },
             { type: "never", text: "Never Have I Ever: Been to a strip club. If you have, drink." },
             { type: "never", text: "Never Have I Ever: Had a paranormal experience. If you have, drink." },
-            { type: "never", text: "Never Have I Ever: Broken the law. If you have, drink." }
+            { type: "never", text: "Never Have I Ever: Broken the law. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Used someone else's toothbrush. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Lied about my age. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Pretended to be sick to skip work/school. If you have, drink." },
+            { type: "never", text: "Never Have I Ever: Eaten something off the floor. If you have, drink." }
         ];
 
         let deck = [];
